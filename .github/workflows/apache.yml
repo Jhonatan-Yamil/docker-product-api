@@ -1,0 +1,28 @@
+name: UPB Devops 2025 CICD - Apache - Jhonny
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy-apache:
+    runs-on: [self-hosted]
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        run: docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build Apache Docker image
+        run: docker build -t ${{ secrets.DOCKER_USERNAME }}/apache-site .
+
+      - name: Push Apache Docker image
+        run: docker push ${{ secrets.DOCKER_USERNAME }}/apache-site
+
+      - name: Delete old Apache container
+        run: docker rm -f apache-site-container || true
+
+      - name: Run Apache container
+        run: docker run -d -p 80:80 --name apache-site-container ${{ secrets.DOCKER_USERNAME }}/apache-site
